@@ -8,8 +8,8 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"github.com/astaxie/beego/logs"
 	_ "github.com/go-sql-driver/mysql"
+	"eat/models"
 )
 
 //  注册数据库
@@ -30,7 +30,6 @@ func RegisterDataBase() {
 			beego.Error("区时环境变量设置错误->", err)
 		}
 		dataSource := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=true&loc=%s", username, password, host, port, database, url.QueryEscape(timezone))
-		logs.Info(dataSource)
 		if err := orm.RegisterDataBase("default", "mysql", dataSource); err != nil {
 			beego.Error("mysql注册失败->", err)
 			os.Exit(1)
@@ -40,5 +39,13 @@ func RegisterDataBase() {
 		// 最大连接数
 		orm.SetMaxOpenConns("default", 30)
 	}
-	beego.Info("数据库初始化完成.")
+	beego.Info("mysql初始化完成.")
+	RegisterTable()
+}
+
+// 注册表
+func RegisterTable() {
+	beego.Info("初始化table")
+	orm.RegisterModel(new(models.User))
+	beego.Info("table初始化完成")
 }

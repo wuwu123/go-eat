@@ -10,7 +10,7 @@ import (
 
 // 日志注册
 func RegisterLogger() {
-
+	beego.Info("初始化日志")
 	logs.SetLogFuncCall(true)
 	logs.SetLogger("console")
 	logs.EnableFuncCallDepth(true)
@@ -74,4 +74,5 @@ func RegisterLogger() {
 		beego.SetLogger(logs.AdapterFile, string(b))
 	}
 	beego.SetLogFuncCall(true)
+	beego.Info("日志初始化完成")
 }

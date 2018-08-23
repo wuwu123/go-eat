@@ -4,6 +4,7 @@ import (
 	"github.com/astaxie/beego"
 	"fmt"
 	"eat/common"
+	"errors"
 )
 
 const SUCCESS = "success"
@@ -25,6 +26,9 @@ type LoginUser struct {
 // 设置用户信息
 func (this *BaseController) SetUser() {
 	topsession := this.Ctx.Input.Header(TOPSESSION)
+	if topsession == "" {
+		topsession = "740e3ff3f32a4daf93ef951ca270034c"
+	}
 	redisClient := common.GetRedis()
 	m, _ := redisClient.HGetAll(topsession).Result()
 	this.User.Id = m["id"]
@@ -35,13 +39,13 @@ func (this *BaseController) SetUser() {
 func (this *BaseController) Prepare() {
 	// 设置用户信息
 	this.SetUser()
-	noLogin := [1]string{"UserControllerPOST"}
+	noLogin := [2]string{"UserControllerPOST" , "DefaultControllerGET"}
 	controller, action := this.GetControllerAndAction()
 	rote := fmt.Sprintf("%s%s", controller, action)
 	status, _ := common.Contain(rote, noLogin)
-	if status {
-		if len(this.User.Id) == 0 {
-			this.OutError(make(map[string]interface{}), this.Ctx.Input.Header(TOPSESSION))
+	if !status {
+		if this.User.Id == "" {
+			this.OutError(make(map[string]interface{}), errors.New("无效的用户"))
 		}
 	}
 }
@@ -56,11 +60,12 @@ func (this *BaseController) OutSuccess(out map[string]interface{}) {
 }
 
 // 失败输出
-func (this *BaseController) OutError(out map[string]interface{}, errorMessage string) {
+func (this *BaseController) OutError(out map[string]interface{}, errorMessage error) {
 	returnData := make(map[string]interface{})
+	beego.Error(errorMessage)
 	returnData["data"] = out
 	returnData["status"] = ERROR
-	returnData["message"] = errorMessage
+	returnData["message"] = errorMessage.Error()
 	this.Data["json"] = returnData
 	this.ServeJSON()
 }
