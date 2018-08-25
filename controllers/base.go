@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"eat/common"
 	"errors"
+	"strconv"
+	"crypto/md5"
+	"encoding/hex"
 )
 
 const SUCCESS = "success"
@@ -19,32 +22,46 @@ type BaseController struct {
 }
 
 type LoginUser struct {
-	Id       string
+	Id       int64
 	Nickname string
+	Openid   string
 }
 
 // 设置用户信息
 func (this *BaseController) SetUser() {
 	topsession := this.Ctx.Input.Header(TOPSESSION)
-	if topsession == "" {
-		topsession = "740e3ff3f32a4daf93ef951ca270034c"
-	}
 	redisClient := common.GetRedis()
 	m, _ := redisClient.HGetAll(topsession).Result()
-	this.User.Id = m["id"]
+	this.User.Id, _ = strconv.ParseInt(m["id"], 10, 64)
 	this.User.Nickname = m["nickname"]
+}
+
+func (this *BaseController) SetSession() string {
+	h := md5.New()
+	h.Write([]byte(this.User.Openid + "hhhh"))
+	key := hex.EncodeToString(h.Sum(nil))
+	redisClient := common.GetRedis()
+	redisClient.HSet(key, "id", this.User.Id)
+	redisClient.HSet(key, "nickname", this.User.Nickname)
+	redisClient.HSet(key, "openid", this.User.Openid)
+	redisClient.Close()
+	return key
+}
+
+func (this *BaseController) GetUserId() (userId int64, error error) {
+	return this.User.Id, error
 }
 
 // 预处理
 func (this *BaseController) Prepare() {
 	// 设置用户信息
 	this.SetUser()
-	noLogin := [2]string{"UserControllerPOST" , "DefaultControllerGET"}
+	noLogin := [2]string{"UserControllerPOST", "DefaultControllerGET"}
 	controller, action := this.GetControllerAndAction()
 	rote := fmt.Sprintf("%s%s", controller, action)
 	status, _ := common.Contain(rote, noLogin)
 	if !status {
-		if this.User.Id == "" {
+		if this.User.Id == 0 {
 			this.OutError(make(map[string]interface{}), errors.New("无效的用户"))
 		}
 	}

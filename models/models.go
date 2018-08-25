@@ -28,11 +28,18 @@ func NewUser() *User {
 }
 
 // 创建用户
-func (user *User) Insert() error {
+func (user *User) Insert() (id int64 , err error) {
 	o := orm.NewOrm()
 	user.CreateTime = time.Now().Unix()
-	_, err := o.Insert(user)
-	return err
+	id , err = o.Insert(user)
+	return id , err
+}
+
+// 查询用户
+func (user *User) FindOpenid(openid string, cols ...string) (*User, error) {
+	o := orm.NewOrm()
+	err := o.QueryTable(user.TableName()).Filter("openid", openid).One(user, cols...)
+	return user, err
 }
 
 // 查询用户

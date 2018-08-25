@@ -46,6 +46,6 @@ func RegisterDataBase() {
 // 注册表
 func RegisterTable() {
 	beego.Info("初始化table")
-	orm.RegisterModel(new(models.User))
+	orm.RegisterModel(new(models.User) , new(models.Eat) , new(models.EatContent))
 	beego.Info("table初始化完成")
 }

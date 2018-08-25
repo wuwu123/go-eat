@@ -1,11 +1,8 @@
 package controllers
 
 import (
-	"encoding/json"
 	"eat/models"
-	"strconv"
 	"errors"
-	"github.com/astaxie/beego"
 )
 
 type UserController struct {
@@ -14,11 +11,7 @@ type UserController struct {
 
 func (this *UserController) Get() {
 	cMap := make(map[string]interface{})
-	userId, err := strconv.ParseInt(this.User.Id, 10, 0)
-	if err != nil {
-		this.OutError(map[string]interface{}{}, err)
-	}
-	user, err := models.NewUser().Find(userId)
+	user, err := models.NewUser().Find(this.User.Id)
 	if err != nil {
 		this.OutError(map[string]interface{}{}, errors.New("用户获取失败"))
 	}
@@ -36,17 +29,31 @@ type PostInput struct {
 }
 
 // 用户注册
-func (this *UserController) Post() {
-	body := this.Ctx.Input.RequestBody
-	var cinput PostInput
-	json.Unmarshal(body, &cinput)
-	user := models.NewUser()
-	user.Openid = cinput.Openid
-	user.Nickname = cinput.Nickname
-	user.Sex = cinput.Sex
-	if err := user.Insert(); err != nil {
-		beego.Error(err)
-		this.OutError(map[string]interface{}{} , errors.New("创建用户失败"))
+// func (this *UserController) Post() {
+// 	body := this.Ctx.Input.RequestBody
+// 	var cinput PostInput
+// 	json.Unmarshal(body, &cinput)
+// 	user := models.NewUser()
+// 	user.Openid = cinput.Openid
+// 	user.Nickname = cinput.Nickname
+// 	user.Sex = cinput.Sex
+// 	if err := user.Insert(); err != nil {
+// 		beego.Error(err)
+// 		this.OutError(map[string]interface{}{}, errors.New("创建用户失败"))
+// 	}
+// 	this.OutSuccess(map[string]interface{}{})
+// }
+
+// 用户菜单名称
+func (this *UserController) Eat() {
+	cMap := make(map[string]interface{})
+	offset, err := this.GetInt64("offset", 0)
+	limit, err := this.GetInt64("limit", 10)
+	eats, count, error := models.NewEat().FindByUser(this.User.Id, offset, limit)
+	if error != nil {
+		this.OutError(map[string]interface{}{}, err)
 	}
-	this.OutSuccess(map[string]interface{}{})
+	cMap["count"] = count
+	cMap["list"] = eats
+	this.OutSuccess(cMap)
 }
