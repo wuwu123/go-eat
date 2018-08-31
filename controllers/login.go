@@ -15,7 +15,7 @@ type CodePost struct {
 }
 
 // 用户菜单名称
-func (this *UserController) Code() {
+func (this *LoginController) Code() {
 	cMap := make(map[string]interface{})
 	body := this.Ctx.Input.RequestBody
 	var cinput CodePost
