@@ -56,7 +56,7 @@ func (this *BaseController) GetUserId() (userId int64, error error) {
 func (this *BaseController) Prepare() {
 	// 设置用户信息
 	this.SetUser()
-	noLogin := [3]string{"UserControllerPOST", "DefaultControllerGET", "UserControllerCode"}
+	noLogin := [3]string{"UserControllerPOST", "DefaultControllerGET", "LoginControllerCode"}
 	controller, action := this.GetControllerAndAction()
 	rote := fmt.Sprintf("%s%s", controller, action)
 	status, _ := common.Contain(rote, noLogin)
